@@ -101,7 +101,7 @@ function showCompanyDialog(rect, companies, plants, cur, onSelect) {
   const plantLabel = document.createElement('label');
   plantLabel.setAttribute('for', 'plant-select-dropdown');
   plantLabel.style.cssText = labelStyle;
-  plantLabel.textContent = 'Plant:';
+  plantLabel.textContent = 'Site:';
   plantRow.appendChild(plantLabel);
 
   const plantSelect = document.createElement('select');
@@ -373,10 +373,10 @@ async function main() {
           }));
         }
         if (!plants.length) {
-          throw new Error('No plants found');
+          throw new Error('No sites found');
         }
       } catch (e) {
-        alert('Failed to load plants list.');
+        alert('Failed to load sites list.');
         removeDialog('company-select-dialog');
         return;
       }
