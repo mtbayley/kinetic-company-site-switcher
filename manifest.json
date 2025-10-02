@@ -1,0 +1,31 @@
+{
+    "name": "Kinetic Company/Plant Switcher",
+    "version": "2024.2.25.0",
+    "manifest_version": 3,
+    "description": "A browser extension that will change the Kinetic company and plant and reload the page",
+    "icons": {
+        "16": "icons/icon16.png",
+        "32": "icons/icon32.png",
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "*://*/*/Apps/ERP/Home/*",
+                "*://*/*/Apps/Erp/Home/*",
+                "*://*/*/apps/erp/home/*",
+                "*://*/*/Apps/ERP/home/*",
+                "*://*/*/Apps/Erp/home/*",
+                "*://*/*/apps/ERP/Home/*",
+                "*://*/*/apps/ERP/home/*",
+                "*://*/*/apps/Erp/Home/*",
+                "*://*/*/apps/Erp/home/*"
+            ],
+            "js": [
+                "content-scripts/content.js"
+            ],
+            "run_at": "document_idle"
+        }
+    ]
+}
