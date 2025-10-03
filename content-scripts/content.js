@@ -55,7 +55,7 @@ function showLoadingDialog(rect) {
 }
 
 // Utility: Show company selection dialog
-function showCompanyDialog(rect, companies, plants, cur, onSelect) {
+function showCompanyDialog(rect, companies, plants, currentCompany, currentSite, onSelect) {
   const dialog = document.createElement('div');
   dialog.id = 'company-select-dialog';
   dialog.style.position = 'absolute';
@@ -81,6 +81,7 @@ function showCompanyDialog(rect, companies, plants, cur, onSelect) {
   companyLabel.textContent = 'Company:';
   companyRow.appendChild(companyLabel);
 
+  // Company dropdown
   const companySelect = document.createElement('select');
   companySelect.id = 'company-select-dropdown';
   companySelect.className = 'k-picker-lg k-rounded-lg';
@@ -89,7 +90,7 @@ function showCompanyDialog(rect, companies, plants, cur, onSelect) {
     const option = document.createElement('option');
     option.value = c.value;
     option.text = c.label;
-    if (c.value === cur) option.selected = true;
+    if (c.value === currentCompany) option.selected = true;
     companySelect.appendChild(option);
   });
   companyRow.appendChild(companySelect);
@@ -104,6 +105,7 @@ function showCompanyDialog(rect, companies, plants, cur, onSelect) {
   plantLabel.textContent = 'Site:';
   plantRow.appendChild(plantLabel);
 
+  // Plant dropdown
   const plantSelect = document.createElement('select');
   plantSelect.id = 'plant-select-dropdown';
   plantSelect.className = 'k-picker-lg k-rounded-lg';
@@ -114,11 +116,12 @@ function showCompanyDialog(rect, companies, plants, cur, onSelect) {
       const option = document.createElement('option');
       option.value = p.value;
       option.text = p.label;
+      if (p.value === currentSite) option.selected = true;
       plantSelect.appendChild(option);
     });
   }
   // Initial population
-  updatePlantDropdown(cur || (companies[0] && companies[0].value));
+  updatePlantDropdown(currentCompany || (companies[0] && companies[0].value));
 
   companySelect.addEventListener('change', function () {
     updatePlantDropdown(companySelect.value);
@@ -147,8 +150,6 @@ function showCompanyDialog(rect, companies, plants, cur, onSelect) {
   dialog.style.top = top + 'px';
   dialog.style.left = left + 'px';
   dialog.style.visibility = 'visible';
-
-
 
   const okBtnWrapper = document.createElement('ep-button');
   okBtnWrapper.className = 'ep-button-wrapper';
@@ -216,7 +217,7 @@ function setCompany(u, val) {
   return u + (u.indexOf('?') > -1 ? '&' : '?') + 'company=' + encodeURIComponent(val);
 }
 
-// Utility: Set plany in URL
+// Utility: Set site in URL
 function setPlant(u, val) {
   if (/([?&]site=)([^&#]*)/i.test(u)) {
     return u.replace(/([?&]site=)([^&#]*)/ig, (_, p1) => p1 + encodeURIComponent(val));
@@ -272,10 +273,20 @@ async function main() {
 
     // Button click handler
     li.addEventListener('click', async function () {
-      removeDialog('company-select-dialog');
+
       const href = location.href;
+
+      // Remove any existing dialog
+      removeDialog('company-select-dialog');
+
+      // Get current company from URL
       const m = /([?&]company=)([^&#]*)/i.exec(href);
-      const cur = m ? decodeURIComponent(m[2]) : '';
+      const currentCompany = m ? decodeURIComponent(m[2]) : '';
+      // Get current site from URL
+      const siteMatch = /([?&]site=)([^&#]*)/i.exec(href);
+      const currentSite = siteMatch ? decodeURIComponent(siteMatch[2]) : '';
+      
+      // Show loading dialog
       const rect = li.getBoundingClientRect();
       showLoadingDialog(rect);
 
@@ -314,7 +325,7 @@ async function main() {
       // Get userId
       var userId = '';
       try {
-        var sessionResp = await fetch(`/${erpEnv}/api/v2/odata/200/Ice.BO.KineticErpSvc/GetUserSessionAndVersion`, {
+        var sessionResp = await fetch(`/${erpEnv}/api/v2/odata/${currentCompany}/Ice.BO.KineticErpSvc/GetUserSessionAndVersion`, {
           method: 'POST',
           headers: {
             'Authorization': 'Bearer ' + bearerToken,
@@ -335,7 +346,7 @@ async function main() {
       // Get company list
       var companies = [];
       try {
-        var compResp = await fetch(`/${erpEnv}/api/v2/odata/200/Ice.BO.UserFileSvc/UserFiles?$filter=UserID%20eq%20%27${encodeURIComponent(userId)}%27&$select=UserID&$expand=UserComps($select=Company,CompanyName,CurPlant,WorkstationID)`, {
+        var compResp = await fetch(`/${erpEnv}/api/v2/odata/${currentCompany}/Ice.BO.UserFileSvc/UserFiles?$filter=UserID%20eq%20%27${encodeURIComponent(userId)}%27&$select=UserID&$expand=UserComps($select=Company,CompanyName,CurPlant,WorkstationID)`, {
           headers: {
             'Authorization': 'Bearer ' + bearerToken,
             'sessioninfo': `{"sessionId":"${sessionId}"}`
@@ -357,7 +368,7 @@ async function main() {
       // Get plant list
       var plants = [];
       try {
-        var plantsResp = await fetch(`/${erpEnv}/api/v2/odata/215/Ice.BO.PlantSvc/GetList?whereClause=${encodeURIComponent(companyFilter)}+by+Company%2C+Name&pageSize=0&absolutePage=0`, {
+        var plantsResp = await fetch(`/${erpEnv}/api/v2/odata/${currentCompany}/Ice.BO.PlantSvc/GetList?whereClause=${encodeURIComponent(companyFilter)}+by+Company%2C+Name&pageSize=0&absolutePage=0`, {
           headers: {
             'Authorization': 'Bearer ' + bearerToken,
             'sessioninfo': `{"sessionId":"${sessionId}"}`
@@ -382,7 +393,7 @@ async function main() {
       }
 
       removeDialog('company-select-dialog');
-      showCompanyDialog(rect, companies, plants, cur, (selectedCompany, selectedPlant) => {
+      showCompanyDialog(rect, companies, plants, currentCompany, currentSite, (selectedCompany, selectedPlant) => {
         if (!selectedCompany || !selectedPlant) {
           return;
         }
