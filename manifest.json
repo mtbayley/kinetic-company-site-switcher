@@ -1,6 +1,6 @@
 {
     "name": "Kinetic Company/Site Switcher",
-    "version": "2024.2.25.1",
+    "version": "2024.2.25.2",
     "manifest_version": 3,
     "description": "A browser extension that will change the Epicor Kinetic company and site and reload the page",
     "icons": {

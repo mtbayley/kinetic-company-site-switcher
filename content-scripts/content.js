@@ -231,10 +231,18 @@ function setPlant(u, val) {
   return u + (u.indexOf('?') > -1 ? '&' : '?') + 'site=' + encodeURIComponent(val);
 }
 
+// Utility: Remove broadcast param from URL
+function removeBroadcastParam(u) {
+  // Remove &useBroadcast=1 if present
+  u = u.replace(/([?&]useBroadcast=)([^&#]*)/ig, '');
+  return u;
+}
+
 // Utility: Reload page with new company
 function reloadWithCompanyAndPlant(href, selectedCompany, selectedPlant) {
   var newUrl = setCompany(href, selectedCompany);
   newUrl = setPlant(newUrl, selectedPlant);
+  newUrl = removeBroadcastParam(newUrl);
   try { location.replace(newUrl); } catch (e) { location.href = newUrl; }
   setTimeout(() => { try { location.reload(true); } catch (_) { location.reload(); } }, 50);
 }
